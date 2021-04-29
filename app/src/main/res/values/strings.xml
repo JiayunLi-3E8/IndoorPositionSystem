@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">室内定位</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">室内定位系统</string>
+    <string name="nav_header_subtitle">Indoor Position System</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">None</string>
+
+    <string name="menu_location">定位</string>
+    <string name="menu_collect">采集</string>
+
+    <string name="collect_positionId">房间号</string>
+    <string name="collect_scanCount">采集数据量（次）</string>
+    <string name="collect_scanStart_Cover">采集(覆盖)</string>
+    <string name="collect_scanEnd">停止</string>
+    <string name="locateStart">定位</string>
+    <string name="refresh_k">刷新K</string>
+    <string name="collect_scanStart_Add">采集(追加)</string>
+    <string name="mapUpgrade">更新地图</string>
+</resources>
