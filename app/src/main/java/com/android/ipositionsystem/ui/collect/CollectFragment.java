@@ -27,6 +27,7 @@ import com.android.ipositionsystem.fmMapUtils.MapCoordResult;
 import com.android.ipositionsystem.knn.PositionInfo;
 import com.android.ipositionsystem.ui.MainViewModel;
 import com.fengmap.android.FMErrorMsg;
+import com.fengmap.android.data.OnFMDownloadProgressListener;
 import com.fengmap.android.map.FMMap;
 import com.fengmap.android.map.FMMapUpgradeInfo;
 import com.fengmap.android.map.FMMapView;
@@ -84,57 +85,57 @@ public class CollectFragment extends Fragment {
         position_id = root.findViewById(R.id.position_id);
         scanCount = root.findViewById(R.id.scanCount);
 
-        openMapByPath(root);
-//        openMapById(root);
+//        openMapByPath(root);
+        openMapById(root);
         fmMap.setOnFMMapClickListener(new OnFmMapClickListener());
 
         return root;
     }
 
-//    private void openMapById(@NotNull View view) { //加载地图资源
-//        FMMapView mapView = view.findViewById(R.id.mapView);
-//        fmMap = mapView.getFMMap();
-//        fmMap.setOnFMMapInitListener(new OnFMMapInitListener() { //地图初始化监听
-//            @Override
-//            public void onMapInitSuccess(String path) { //初始化成功回调
-//                fmMap.loadThemeById("1384497800603836418"); //加载主题
-//                fmMap.setFMViewMode(FMViewMode.FMVIEW_MODE_3D); //设置地图3D显示模式
-//                fmMap.setZoomLevel(22, true); //设置显示级别（大小）
-//            }
-//
-//            @Override
-//            public void onMapInitFailure(String path, int errorCode) { //初始化失败回调
-//                Log.e("onMapInitFailure", path);
-//                Log.e("onMapInitFailure", FMErrorMsg.getErrorMsg(errorCode));
-//            }
-//
-//            @Override
-//            public boolean onUpgrade(FMMapUpgradeInfo upgradeInfo) { //手动升级时回调
-//                fmMap.upgrade(upgradeInfo, new OnFMDownloadProgressListener() {
-//                    @SuppressLint("DefaultLocale")
-//                    @Override
-//                    public void onProgress(long bytesWritten, long totalSize) {
-//                        TextView downloadProgress = requireActivity().findViewById(R.id.dataDisplay);
-//                        downloadProgress.setText(String.format("正在下载：%.2fKB/%.2fKB", bytesWritten / 1024.0, totalSize / 1024.0));
-//                    }
-//
-//                    @Override
-//                    public void onCompleted(String mapPath) {
-//                        TextView downloadProgress = requireActivity().findViewById(R.id.dataDisplay);
-//                        downloadProgress.setText("下载完成");
-//                    }
-//
-//                    @Override
-//                    public void onFailure(String mapPath, int errorCode) {
-//                        Log.e("MapUpgradeFailure", mapPath);
-//                        Log.e("MapUpgradeFailure", FMErrorMsg.getErrorMsg(errorCode));
-//                    }
-//                });
-//                return true;
-//            }
-//        });
-//        fmMap.openMapById("1384107483851476993", false); //加载地图，不自动升级
-//    }
+    private void openMapById(@NotNull View view) { //加载地图资源
+        FMMapView mapView = view.findViewById(R.id.mapView);
+        fmMap = mapView.getFMMap();
+        fmMap.setOnFMMapInitListener(new OnFMMapInitListener() { //地图初始化监听
+            @Override
+            public void onMapInitSuccess(String path) { //初始化成功回调
+                fmMap.loadThemeById("1384497800603836418"); //加载主题
+                fmMap.setFMViewMode(FMViewMode.FMVIEW_MODE_3D); //设置地图3D显示模式
+                fmMap.setZoomLevel(22, true); //设置显示级别（大小）
+            }
+
+            @Override
+            public void onMapInitFailure(String path, int errorCode) { //初始化失败回调
+                Log.e("onMapInitFailure", path);
+                Log.e("onMapInitFailure", FMErrorMsg.getErrorMsg(errorCode));
+            }
+
+            @Override
+            public boolean onUpgrade(FMMapUpgradeInfo upgradeInfo) { //手动升级时回调
+                fmMap.upgrade(upgradeInfo, new OnFMDownloadProgressListener() {
+                    @SuppressLint("DefaultLocale")
+                    @Override
+                    public void onProgress(long bytesWritten, long totalSize) {
+                        TextView downloadProgress = requireActivity().findViewById(R.id.dataDisplay);
+                        downloadProgress.setText(String.format("正在下载：%.2fKB/%.2fKB", bytesWritten / 1024.0, totalSize / 1024.0));
+                    }
+
+                    @Override
+                    public void onCompleted(String mapPath) {
+                        TextView downloadProgress = requireActivity().findViewById(R.id.dataDisplay);
+                        downloadProgress.setText("下载完成");
+                    }
+
+                    @Override
+                    public void onFailure(String mapPath, int errorCode) {
+                        Log.e("MapUpgradeFailure", mapPath);
+                        Log.e("MapUpgradeFailure", FMErrorMsg.getErrorMsg(errorCode));
+                    }
+                });
+                return true;
+            }
+        });
+        fmMap.openMapById("1384107483851476993", false); //加载地图，不自动升级
+    }
 
     private void openMapByPath(@NotNull View view) {
         FMMapView mapView = view.findViewById(R.id.mapView);
