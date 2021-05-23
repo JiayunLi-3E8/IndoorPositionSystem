@@ -18,4 +18,5 @@
     <string name="refresh_k">刷新K</string>
     <string name="collect_scanStart_Add">采集(追加)</string>
     <string name="mapUpgrade">更新地图</string>
+    <string name="k">k值</string>
 </resources>

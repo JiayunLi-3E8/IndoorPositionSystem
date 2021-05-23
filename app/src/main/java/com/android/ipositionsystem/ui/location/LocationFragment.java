@@ -6,12 +6,14 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.SeekBar;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,11 +54,13 @@ public class LocationFragment extends Fragment { //此类相似注释在 Collect
     private LocateSensorEventListener sensorEventListener;
     private IpsDbHelper openHelper;
 
-    private SeekBar seekK;
+    private EditText selectK;
+    private TextView infoText;
 
     private FMMap fmMap;
     private FMImageMarker marker;
 
+    @SuppressLint("SetTextI18n")
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_location, container, false);
 
@@ -65,14 +69,26 @@ public class LocationFragment extends Fragment { //此类相似注释在 Collect
         sensorEventListener = new LocateSensorEventListener();
         openHelper = viewModel.getOpenHelper();
 
-        locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
-        TextView kValue = root.findViewById(R.id.kValue);
-        locationViewModel.getKValue().observe(getViewLifecycleOwner(), kValue::setText);
-
-        seekK = root.findViewById(R.id.seek_K);
-        seekK.setOnSeekBarChangeListener(new SeekChangListener());
+        infoText = root.findViewById(R.id.mapInfo);
+        selectK = root.findViewById(R.id.select_K);
+        selectK.addTextChangedListener(new KChangListener());
         Button locateStart = root.findViewById(R.id.locateStart);
         locateStart.setOnClickListener(new OnLocateStartClickListener());
+
+        locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
+        locationViewModel.getKValue().observe(getViewLifecycleOwner(), k -> {
+            Integer maxK = locationViewModel.getMaxK().getValue();
+            if (maxK == null) {
+                Toast.makeText(requireActivity(), "无数据", Toast.LENGTH_SHORT).show();
+            } else if (k == null) {
+                infoText.setText("K:NULL");
+            } else if (k > maxK) {
+                locationViewModel.getKValue().setValue(maxK);
+            } else {
+                infoText.setText("K:" + k.toString());
+            }
+        });
+        locationViewModel.getMaxK().observe(getViewLifecycleOwner(), maxK -> selectK.setHint("K值（0~" + maxK + "）"));
 
 //        openMapByPath(root); //加载本地默认地图
         openMapById(root); //加载地图
@@ -169,12 +185,11 @@ public class LocationFragment extends Fragment { //此类相似注释在 Collect
             return;
         }
         int maxK = positionInfoList.size(); //K的最大值
-        seekK.setMax(maxK);
-        seekK.setProgress(minDataRow); //设置适当的K
+        locationViewModel.getMaxK().setValue(maxK);
+        locationViewModel.getKValue().setValue(minDataRow); //设置适当的K
         Toast.makeText(requireActivity(), "数据刷新√", Toast.LENGTH_SHORT).show();
     }
 
-    @SuppressWarnings("deprecation")
     private class OnLocateStartClickListener implements View.OnClickListener { //定位按钮
         @Override
         public void onClick(View view) {
@@ -195,18 +210,24 @@ public class LocationFragment extends Fragment { //此类相似注释在 Collect
         }
     }
 
-    private final class SeekChangListener implements SeekBar.OnSeekBarChangeListener {
+    private final class KChangListener implements TextWatcher {
         @Override
-        public void onProgressChanged(@NotNull SeekBar seekBar, int i, boolean b) {
-            locationViewModel.getKValue().setValue("K: " + i + "/" + seekBar.getMax()); //滑动条更新K值显示
+        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
         }
 
         @Override
-        public void onStartTrackingTouch(SeekBar seekBar) {
+        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
         }
 
         @Override
-        public void onStopTrackingTouch(SeekBar seekBar) {
+        public void afterTextChanged(Editable s) {
+            if (s.toString().equals("")) {
+                locationViewModel.getKValue().setValue(null);
+            } else {
+                locationViewModel.getKValue().setValue(Integer.parseInt(s.toString()));
+            }
         }
     }
 
@@ -221,7 +242,6 @@ public class LocationFragment extends Fragment { //此类相似注释在 Collect
         }
     }
 
-    @SuppressWarnings("deprecation")
     private void location(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ORIENTATION) {
             locateInfo.setOrientation_x(event.values[SensorManager.DATA_X]);
@@ -238,12 +258,16 @@ public class LocationFragment extends Fragment { //此类相似注释在 Collect
 
             if (++locatedCount > 0) {
                 locationScanStop();
-                KnnFcn knnFcn = new KnnFcn(positionInfoList); //初始化KNN类，positionInfoList为knn的模型
-                int positionId = knnFcn.knn(locateInfo, seekK.getProgress()); //用knn计算当前位置房间id；locateInfo：当前位置传感器信息，seekK.getProgress()：K值
-                mapLocationById(positionId); //地图显示当前房间的定位点
-                TextView resultText = requireActivity().findViewById(R.id.mapInfo); //显示结果信息
-                resultText.setText(String.format("当前房间号：%s", positionId));
-                Toast.makeText(requireActivity(), "定位√", Toast.LENGTH_SHORT).show();
+                Integer K = locationViewModel.getKValue().getValue();
+                if (K == null) {
+                    Toast.makeText(requireActivity(), "K值为空", Toast.LENGTH_SHORT).show();
+                } else {
+                    KnnFcn knnFcn = new KnnFcn(positionInfoList); //初始化KNN类，positionInfoList为knn的模型
+                    int positionId = knnFcn.knn(locateInfo, K); //用knn计算当前位置房间id；locateInfo：当前位置传感器信息，K：K值
+                    mapLocationById(positionId); //地图显示当前房间的定位点
+                    infoText.setText(String.format("当前房间号：%s", positionId)); //显示结果信息
+                    Toast.makeText(requireActivity(), "定位√", Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }
